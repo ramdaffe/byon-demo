@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e30613">
+<title>OCBC Mobile — interactive demo</title>
+<style>
+  :root {
+    --red-primary:        #e30613;
+    --red-dark:           #ba1c18;
+    --black-primary:      #202020;
+    --white-primary:      #ffffff;
+    --gray-bright:        #575d65;
+    --gray-soft:          #6e747c;
+    --gray-blush:         #eef0f4;
+    --bg-page:            #f3f4f7;
+    --bg-preview:         #eef1f5;
+    --font-family: "Fira Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --shadow-card: 0 2px 8px rgba(0,0,0,.06);
+    --shadow-card-lg: 0 14px 32px rgba(0,0,0,.14);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font-family);
+    font-size: 16px;
+    color: var(--black-primary);
+    background: var(--bg-page);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(227,6,19,.06) 0%, rgba(227,6,19,0) 60%),
+      linear-gradient(180deg, #fff 0%, #f7f8fa 100%);
+    border-bottom: 1px solid var(--gray-blush);
+    padding: 44px 22px 40px;
+    text-align: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--gray-blush);
+    color: var(--gray-bright);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow-card);
+  }
+  .badge .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red-primary);
+    box-shadow: 0 0 0 4px rgba(227,6,19,.14);
+  }
+  .hero h1 {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--black-primary);
+    letter-spacing: -.6px;
+    line-height: 1.12;
+    margin-bottom: 14px;
+  }
+  .hero h1 .accent { color: var(--red-primary); }
+  .hero p.lead {
+    color: var(--gray-soft);
+    font-size: 18px;
+    line-height: 1.55;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ---------- grid ---------- */
+  .container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 18px 56px;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--black-primary);
+    margin-bottom: 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* ---------- card ---------- */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    border: 1px solid transparent;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-lg);
+    border-color: rgba(227,6,19,.25);
+  }
+  .card:active { transform: scale(.99); }
+
+  .card-info {
+    padding: 18px 4px 18px 20px;
+    min-width: 0;
+  }
+  .card-info h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--black-primary);
+    letter-spacing: -.2px;
+    line-height: 1.25;
+    margin-bottom: 5px;
+  }
+  .card-info p {
+    font-size: 14.5px;
+    color: var(--gray-bright);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .open-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--red-primary);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .open-link svg {
+    width: 12px; height: 12px;
+    transition: transform .18s ease;
+  }
+  .card:hover .open-link svg { transform: translateX(3px); }
+
+  /* phone preview — de-emphasized, contained */
+  .card-preview {
+    width: 96px;
+    height: 168px;
+    background: var(--bg-preview);
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card-preview::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(238,241,245,0) 60%, rgba(238,241,245,.9) 100%);
+    pointer-events: none;
+  }
+  .card-preview img {
+    width: 78px;
+    height: auto;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  }
+
+  /* ---------- footer ---------- */
+  .footer {
+    border-top: 1px solid var(--gray-blush);
+    padding: 22px;
+    text-align: center;
+    color: var(--gray-bright);
+    font-size: 13px;
+    background: #fff;
+  }
+  .footer .brand { color: var(--red-primary); font-weight: 700; }
+
+  /* ---------- tablet / desktop ---------- */
+  @media (min-width: 640px) {
+    .hero { padding: 64px 32px 52px; }
+    .hero h1 { font-size: 40px; }
+    .hero p.lead { font-size: 20px; }
+    .container { padding: 48px 32px 72px; }
+    .section-title { font-size: 18px; margin-bottom: 22px; }
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+    .card-info { padding: 22px 8px 22px 24px; }
+    .card-info h2 { font-size: 20px; }
+    .card-info p { font-size: 15px; }
+    .card-preview { width: 120px; height: 210px; }
+    .card-preview img { width: 96px; border-radius: 10px; }
+  }
+  @media (min-width: 1024px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .card, .open-link svg { transition: none; }
+    .card:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <span class="badge"><span class="dot"></span> Interactive demo</span>
+  <h1>Welcome to <span class="accent">OCBC Mobile</span></h1>
+  <p class="lead">Explore the app straight from your phone — no download, no sign-up. Pick a journey below and tap around like it's the real thing.</p>
+</header>
+
+<main class="container">
+  <h2 class="section-title">Tap a journey to begin</h2>
+
+  <div class="grid">
+
+    <a class="card" href="dashboard.html">
+      <div class="card-info">
+        <h2>Home</h2>
+        <p>Your balances, quick actions, and everyday shortcuts in one place.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/dashboard.jpg" alt="Home screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="forex.html">
+      <div class="card-info">
+        <h2>Buy foreign currency</h2>
+        <p>Check live exchange rates across 14 currencies, with table and graph views.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/forex.jpg" alt="Foreign currency screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="qr-scan.html">
+      <div class="card-info">
+        <h2>Scan to pay</h2>
+        <p>Pay any QRIS merchant in seconds — just point your camera at the code.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/qr-scan.jpg" alt="QR scan screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="qr-input.html">
+      <div class="card-info">
+        <h2>Confirm a payment</h2>
+        <p>Review the biller, enter the amount, and you're ready to go.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/qr-input.jpg" alt="Payment confirmation screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="topup.html">
+      <div class="card-info">
+        <h2>Top up &amp; pay bills</h2>
+        <p>Electronic money, phone credit, household utilities, and public services.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/topup.jpg" alt="Top up and pay bills screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="investment.html">
+      <div class="card-info">
+        <h2>Grow your money</h2>
+        <p>Browse investment products and see how your portfolio is performing.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/investment.jpg" alt="Investment screen preview">
+      </div>
+    </a>
+
+    <a class="card" href="reward.html">
+      <div class="card-info">
+        <h2>Your rewards</h2>
+        <p>Points, Voyage Miles, promos, and Premier Banking benefits — all in one tab.</p>
+        <span class="open-link">Open
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+      <div class="card-preview">
+        <img src="thumbs/reward.jpg" alt="Rewards screen preview">
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <span class="brand">OCBC Mobile</span> · Interactive prototype
+</footer>
+</body>
+</html>
