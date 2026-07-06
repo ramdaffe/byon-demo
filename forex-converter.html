@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Forex Converter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* =========================================================
+   DESIGN TOKENS — canonical source: ../shared/tokens.css
+   Sourced from ocbc_apktool/res/values/{colors,dimens}.xml
+   (1dp = 1px on this 360dp logical canvas; 1sp = 1px)
+   ========================================================= */
+:root {
+  --red-primary:        #e30613;
+  --red-dark:           #ba1c18;
+  --black-primary:      #202020;
+  --black-medium:       #80838b;
+  --white-primary:      #ffffff;
+  --gray-bright:        #575d65;
+  --gray-blush:         #d3d8e5;
+  --default-window-bg:  #ffffff;
+
+  /* semantic */
+  --info-banner-bg:     #f0f8d8;   /* light yellow-green info box */
+  --input-amount-fg:    #202020;
+  --input-amount-dim:   #c8c8d0;   /* disabled/pending amount */
+  --divider:            #e8e8e8;
+
+  --font-family:   "Fira Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --shadow-card:    0 1px 2px rgba(0,0,0,.04);
+  --shadow-card-lg: 0 6px 16px rgba(0,0,0,.10);
+  --shadow-cta:     0 -2px 6px rgba(0,0,0,.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; }
+body {
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--black-primary);
+  background: #ececec;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================================
+   PHONE FRAME — 360dp × 800dp logical canvas
+   ========================================================= */
+.phone {
+  width: 360px;
+  min-height: 800px;
+  background: var(--default-window-bg);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================================
+   STATUS BAR — generic Android row (matches shared chrome)
+   ========================================================= */
+.status-bar {
+  height: 28px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-size: 11px;
+  color: var(--black-primary);
+  flex-shrink: 0;
+  position: relative;
+}
+.status-time {
+  font-weight: 600;
+  letter-spacing: .2px;
+  color: var(--black-primary);
+}
+.status-right {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--black-primary);
+}
+.status-right .si-glyph { width: 14px; height: 12px; color: var(--black-primary); }
+.status-right .si-pct {
+  font-size: 10px; font-weight: 600; color: var(--black-primary); padding-left: 2px;
+}
+
+/* =========================================================
+   TOOLBAR — white bg, red back, black center title
+   ========================================================= */
+.toolbar {
+  height: 48px;
+  background: #fff;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.toolbar-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red-primary);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.toolbar-back svg { width: 22px; height: 22px; }
+.toolbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black-primary);
+  text-align: center;
+}
+
+/* =========================================================
+   PAGE BODY
+   ========================================================= */
+.page {
+  flex: 1 1 auto;
+  background: #f8f8f8;
+  padding: 12px 14px 0;
+  overflow-y: auto;
+}
+
+/* "Remaining purchase limit" card */
+.limit-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.limit-card .label {
+  font-size: 14px;
+  color: var(--gray-bright);
+}
+.limit-card .value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black-primary);
+}
+
+/* Main converter card */
+.converter {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+/* Info banner (rate disclosure) */
+.rate-info {
+  background: var(--info-banner-bg);
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--black-primary);
+  line-height: 1.5;
+  text-align: center;
+}
+.rate-info b {
+  font-weight: 700;
+}
+
+/* Buy / Sell sections */
+.side {
+  position: relative;
+  padding: 14px 18px 14px;
+}
+.side + .side { border-top: 1px solid var(--divider); }
+.side .side-label {
+  font-size: 13px;
+  color: var(--gray-bright);
+  margin-bottom: 6px;
+}
+.side .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.side .currency {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--black-primary);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.side .currency .chev {
+  width: 10px;
+  height: 10px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  display: inline-block;
+}
+.side .amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--input-amount-fg);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+.side--sell .amount {
+  color: var(--input-amount-dim);
+  font-weight: 700;
+}
+
+/* Swap button in the middle of the divider */
+.swap-wrap {
+  position: relative;
+  height: 0;
+  z-index: 2;
+}
+.swap {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--red-primary);
+  color: #fff;
+  border: 4px solid #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.swap svg { width: 18px; height: 18px; }
+
+/* Min transaction note (in sell section) */
+.min-note {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--gray-bright);
+  text-align: center;
+}
+
+/* Tip card (lightbulb + "Click here" link) */
+.tip {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.tip .ic {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tip .ic svg { width: 30px; height: 30px; }
+.tip .text {
+  font-size: 13px;
+  color: var(--black-primary);
+  line-height: 1.45;
+}
+.tip a {
+  color: var(--red-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* =========================================================
+   BOTTOM ACTION BAR
+   ========================================================= */
+.bottom {
+  flex-shrink: 0;
+  background: #fff;
+  border-top: 1px solid var(--divider);
+  padding: 12px 14px 16px;
+  box-shadow: var(--shadow-cta);
+}
+.btn-continue {
+  display: block;
+  width: 100%;
+  height: 50px;
+  border-radius: 6px;
+  background: var(--red-primary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(227, 6, 19, 0.25);
+}
+.btn-rate-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--black-primary);
+  font-size: 15px;
+  font-weight: 700;
+  border: 1.5px solid var(--red-primary);
+  cursor: pointer;
+}
+.btn-rate-alert svg { width: 18px; height: 18px; color: var(--black-primary); }
+
+/* Home indicator (Android nav bar) */
+.home-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  border-radius: 2px;
+  background: #c0c0c8;
+  z-index: 30;
+}
+
+/* =========================================================
+   RESPONSIVE WRAPPER
+   ========================================================= */
+@media (min-width: 481px) {
+  body { padding: 24px 0; background: #E5E5EA; }
+  .phone {
+    width: 360px;
+    margin: 0 auto;
+    box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  }
+}
+@media (max-width: 480px) {
+  body { padding: 0; background: #fff; }
+  .phone {
+    width: 100vw;
+    min-height: 100vh;
+    box-shadow: none;
+  }
+}
+</style>
+
+  <!-- =========================================================
+       HOSTED-PROTOTYPE WRAPPER — added by prototype/wire-links.py
+       Desktop: 360px phone centered on a neutral page bg.
+       Mobile (≤ 480px): phone fills the screen up to 360px
+       and the page scrolls vertically.
+       ========================================================= -->
+  <style>
+    html, body {
+      background: #ececec;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 360px;
+      margin: 0 auto;
+      display: block;
+    }
+    .phone {
+      width: 360px;
+      height: auto;
+      min-height: 800px;
+    }
+    @media (max-width: 480px) {
+      html, body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 100vw;
+        max-width: 360px;
+        margin: 0 auto;
+      }
+      .phone {
+        width: 100%;
+        max-width: 360px;
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="phone" role="application" aria-label="Forex Converter prototype">
+
+  <!-- Status bar (generic, matches shared chrome) -->
+  <div class="status-bar" aria-hidden="true">
+    <span class="status-time">09:15</span>
+    <div class="status-right">
+      <svg class="si-glyph" viewBox="0 0 14 12" aria-hidden="true">
+        <rect x="0"  y="8" width="2" height="4"  fill="currentColor"/>
+        <rect x="4"  y="5" width="2" height="7"  fill="currentColor"/>
+        <rect x="8"  y="2" width="2" height="10" fill="currentColor"/>
+        <rect x="12" y="0" width="2" height="12" fill="currentColor"/>
+      </svg>
+      <svg class="si-glyph" viewBox="0 0 14 12" aria-hidden="true">
+        <path d="M7 11a1.4 1.4 0 100-2.8 1.4 1.4 0 000 2.8zM2.8 6.5a6 6 0 018.4 0l-1 1a4.6 4.6 0 00-6.4 0l-1-1zM.6 4.2a9.2 9.2 0 0112.8 0l-1 1a7.8 7.8 0 00-10.8 0l-1-1z" fill="currentColor"/>
+      </svg>
+      <svg class="si-glyph" viewBox="0 0 22 12" aria-hidden="true">
+        <rect x="0" y="0" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="2" y="2" width="12" height="8"  fill="currentColor"/>
+        <rect x="19" y="3.5" width="2" height="5" rx="0.5" fill="currentColor"/>
+      </svg>
+      <span class="si-pct">80</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <header class="toolbar">
+    <a class="toolbar-back" href="forex.html" aria-label="Kembali">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </a>
+    <div class="toolbar-title">Forex Converter</div>
+  </header>
+
+  <!-- Page body -->
+  <main class="page">
+
+    <!-- Remaining purchase limit -->
+    <div class="limit-card">
+      <span class="label">Remaining purchase limit</span>
+      <span class="value">USD 25,000</span>
+    </div>
+
+    <!-- Main converter -->
+    <div class="converter">
+      <!-- Rate info banner -->
+      <div class="rate-info">
+        <b>Exchange rate USD 1 = IDR 17,837</b> is based on the indicative<br>
+        rate on Sun, 21 Jun 2026 &bull; 09:15 WIB
+      </div>
+
+      <!-- I'd like to buy -->
+      <div class="side side--buy">
+        <div class="side-label">I'd like to buy</div>
+        <div class="row">
+          <button class="currency" type="button">
+            USD
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="amount">1,000</div>
+        </div>
+      </div>
+
+      <!-- Swap button -->
+      <div class="swap-wrap">
+        <button class="swap" type="button" aria-label="Tukar mata uang">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- "1" digit: a vertical line with a small foot at the top -->
+            <path d="M8.5 4 L11 5.5"/>
+            <path d="M9.5 5 L9.5 18"/>
+            <path d="M7 18 L12 18"/>
+            <!-- right arrow: vertical line with arrowhead pointing down -->
+            <path d="M15.5 4 L15.5 18"/>
+            <path d="M12 14.5 L15.5 18 L19 14.5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- I'd like to sell -->
+      <div class="side side--sell">
+        <div class="side-label">I'd like to sell</div>
+        <div class="row">
+          <button class="currency" type="button">
+            IDR
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="amount">17,837,000</div>
+        </div>
+        <div class="min-note">Minimum transaction equivalent to IDR 50,000</div>
+      </div>
+    </div>
+
+    <!-- Tip card -->
+    <div class="tip">
+      <span class="ic" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <!-- lightbulb body (yellow) -->
+          <path d="M16 4 C11 4 8 8 8 12 C8 15 10 17 12 18 V20 H20 V18 C22 17 24 15 24 12 C24 8 21 4 16 4 Z"
+                fill="#FFC700" stroke="#D83028" stroke-width="1.6" stroke-linejoin="round"/>
+          <!-- base lines -->
+          <rect x="12" y="21" width="8" height="2" rx="0.5" fill="#D83028"/>
+          <rect x="13" y="24" width="6" height="2" rx="0.5" fill="#D83028"/>
+          <!-- rays -->
+          <path d="M16 2 V0" stroke="#D83028" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M3 12 H1" stroke="#D83028" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M31 12 H29" stroke="#D83028" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M5 5 L4 4" stroke="#D83028" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M27 5 L28 4" stroke="#D83028" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="text">
+        Want to see other exchange rates via Forex Tables and Charts? <a href="#">Click here</a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom action bar -->
+  <div class="bottom">
+    <button class="btn-continue" type="button">Continue</button>
+    <button class="btn-rate-alert" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="13" r="8"/>
+        <path d="M12 9v4l2.5 2.5"/>
+        <path d="M9 2 h6"/>
+      </svg>
+      <span>Rate Alert</span>
+    </button>
+  </div>
+
+  <!-- Home indicator -->
+  <div class="home-indicator" aria-hidden="true"></div>
+
+</div>
+</body>
+</html>
